@@ -19,3 +19,14 @@ model Tag {
 
   @@map("tags")
 }
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  username String  @unique
+  bio      String? @default("")
+  image    String? @default("")
+  password String
+
+  @@map("users")
+}
