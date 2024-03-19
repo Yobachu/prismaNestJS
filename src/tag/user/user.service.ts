@@ -56,4 +56,25 @@ export class UserService {
     delete user.password;
     return { ...user, token };
   }
+
+  async updateCurrentUser(id: number, updateUserDto) {
+    const user = await this.prisma.user.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        ...updateUserDto,
+      },
+    });
+    return user;
+  }
+
+  async buildUserResponse(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+    const token = await this.jwtService.sign({ id: user.id });
+    delete user.password;
+    return { ...user, token };
+  }
 }
