@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/createUser.dto';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
+import { PrismaService } from '../prisma.service';
 
 export const roundsOfHashing = 10;
 @Injectable()
@@ -67,6 +67,12 @@ export class UserService {
       },
     });
     return user;
+  }
+
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    delete user.password;
+    return { ...user };
   }
 
   async buildUserResponse(id: number) {

@@ -11,9 +11,9 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './decorators/user.decorator';
-import { JwtPayload } from '../../types/interfaces';
 import { AuthGuard } from './guards/auth.guard';
 import { UpdateUserDto } from './dto/updateUserDto';
+import { JwtPayload } from '../types/interfaces';
 
 @Controller()
 export class UserController {
@@ -35,7 +35,7 @@ export class UserController {
 
   @Get('user')
   @UseGuards(AuthGuard)
-  async currentUser(@User('id') user: JwtPayload) {
+  async currentUser(@User() user: JwtPayload) {
     const userData = await this.userService.buildUserResponse(user.id);
     return { user: userData };
   }
