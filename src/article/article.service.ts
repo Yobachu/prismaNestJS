@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateArticleDto } from './dto/createArticle.dto';
 import { PrismaService } from '../prisma.service';
 import { JwtPayload } from '../types/interfaces';
@@ -18,18 +18,49 @@ export class ArticleService {
     const id = currentUser.id;
     const user = await this.userService.findOne(id);
     console.log(user);
+    const slug = this.getSlug(createArticleDto.title);
+    const authorId = currentUser.id;
     const article = await this.prisma.article.create({
-      data: createArticleDto,
+      data: {
+        ...createArticleDto,
+        slug: slug,
+        authorId: authorId,
+      },
       include: { author: true },
     });
     if (!article.tagList) {
       article.tagList = [];
     }
-    article.slug = this.getSlug(createArticleDto.title);
     article.author = user;
-    article.authorId = currentUser.id;
     delete article.authorId;
     return { article: article };
+  }
+
+  async getSingleArticle(slug: string) {
+    const article = await this.prisma.article.findFirst({
+      where: { slug: slug },
+      include: { author: true },
+    });
+    delete article.authorId;
+    return article;
+  }
+
+  async deleteArticle(currentuser: JwtPayload, slug: string) {
+    const article = await this.prisma.article.findFirst({
+      where: { slug: slug },
+      include: { author: true },
+    });
+    if (!article) {
+      throw new HttpException('Article not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (article.authorId !== currentuser.id) {
+      throw new HttpException('You are not an author', HttpStatus.FORBIDDEN);
+    }
+    const articleDel = await this.prisma.article.deleteMany({
+      where: { slug: slug },
+    });
+    return articleDel;
   }
 
   private getSlug(title: string): string {
