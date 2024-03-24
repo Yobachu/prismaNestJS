@@ -63,6 +63,29 @@ export class ArticleService {
     return articleDel;
   }
 
+  async updateArticle(
+    currentUser: JwtPayload,
+    slug: string,
+    updateArticleDto: CreateArticleDto,
+  ) {
+    const article = await this.prisma.article.update({
+      where: { slug: slug },
+      data: { ...updateArticleDto },
+      include: { author: true },
+    });
+
+    if (!article) {
+      throw new HttpException('Article not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (article.authorId !== currentUser.id) {
+      throw new HttpException('You are not an author', HttpStatus.FORBIDDEN);
+    }
+    delete article.authorId;
+
+    return article;
+  }
+
   private getSlug(title: string): string {
     return (
       slugify(title, { lower: true }) +
