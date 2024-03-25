@@ -42,6 +42,7 @@ export class ArticleService {
       include: { author: true },
     });
     delete article.authorId;
+    delete article.author.password;
     return article;
   }
 
@@ -82,10 +83,115 @@ export class ArticleService {
       throw new HttpException('You are not an author', HttpStatus.FORBIDDEN);
     }
     delete article.authorId;
+    delete article.author.password;
 
     return article;
   }
 
+  async findAll(
+    currentUser: JwtPayload,
+    limit: number,
+    offset: number,
+    orderBy,
+    author,
+    tags,
+  ) {
+    const whereCondition: any = {};
+    if (author) {
+      whereCondition.author = { username: author };
+    }
+    if (tags && tags.length > 0) {
+      whereCondition.tagList = {
+        has: tags,
+      };
+    }
+    const articles = await this.prisma.article.findMany({
+      where: whereCondition,
+      include: {
+        author: true,
+      },
+      take: Number(limit) || undefined,
+      skip: Number(offset) || undefined,
+      orderBy: { createdAt: orderBy },
+    });
+    const articlesCount = await this.prisma.article.count();
+    const articlesWithoutPasswords = articles.map((article) => ({
+      ...article,
+      author: {
+        ...article.author,
+        password: undefined,
+      },
+    }));
+    return { articles: articlesWithoutPasswords, articlesCount };
+  }
+
+  async likeArticle(slug: string, currentUser: JwtPayload) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { likedArticles: true, id: true },
+    });
+    const articles = await this.prisma.article.findUnique({
+      where: { slug: slug },
+      select: { likedBy: true, favoritesCount: true },
+    });
+    const userHasLiked = articles.likedBy.some(
+      (likedUser) => likedUser.id === user.id,
+    );
+    if (userHasLiked) {
+      throw new HttpException(
+        'User has already liked this article.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    const article = await this.prisma.article.update({
+      where: { slug: slug },
+      include: { author: true, likedBy: true },
+      data: {
+        likedBy: {
+          connect: { id: user.id },
+        },
+        favoritesCount: articles.favoritesCount + 1,
+      },
+    });
+    delete article.authorId;
+    delete article.author.password;
+    article.likedBy.forEach((user) => {
+      delete user.password;
+    });
+    return { article: article };
+  }
+
+  async dislikeArticle(slug: string, currentUser: JwtPayload) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { likedArticles: true, id: true },
+    });
+    const articles = await this.prisma.article.findUnique({
+      where: { slug: slug },
+      select: { likedBy: true, favoritesCount: true },
+    });
+    const userHasLiked = articles.likedBy.some(
+      (likedUser) => likedUser.id === user.id,
+    );
+    if (!userHasLiked) {
+      throw new HttpException(
+        'User has not liked this article.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const article = await this.prisma.article.update({
+      where: { slug: slug },
+      include: { author: true },
+      data: {
+        likedBy: {
+          disconnect: { id: user.id },
+        },
+        favoritesCount: articles.favoritesCount - 1,
+      },
+    });
+    return { article: article };
+  }
   private getSlug(title: string): string {
     return (
       slugify(title, { lower: true }) +

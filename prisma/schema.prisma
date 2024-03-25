@@ -21,13 +21,14 @@ model Tag {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  username String    @unique
-  bio      String?   @default("")
-  image    String?   @default("")
-  password String
-  articles Article[]
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  username      String    @unique
+  bio           String?   @default("")
+  image         String?   @default("")
+  password      String
+  articles      Article[]
+  likedArticles Article[] @relation("UserLikes")
 
   @@map("users")
 }
@@ -44,6 +45,7 @@ model Article {
   favoritesCount Int?     @default(0)
   author         User?    @relation(fields: [authorId], references: [id])
   authorId       Int?
+  likedBy        User[]   @relation("UserLikes")
 
   @@map("articles")
 }

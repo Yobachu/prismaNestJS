@@ -6,7 +6,10 @@ import {
   Param,
   Post,
   Put,
-  UseGuards, UsePipes, ValidationPipe,
+  Query,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { AuthGuard } from '../user/guards/auth.guard';
@@ -54,5 +57,42 @@ export class ArticleController {
       updateArticleDto,
     );
     return { article: article };
+  }
+
+  @Get()
+  async findAll(
+    @User() currentUser: JwtPayload,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+    @Query('orderBy') orderBy?: 'desc' | 'asc',
+    @Query('author') author?: string,
+    @Query('tags') tags?: string[],
+  ) {
+    return this.articleService.findAll(
+      currentUser,
+      limit,
+      offset,
+      orderBy,
+      author,
+      tags,
+    );
+  }
+
+  @Post(':slug/favorited')
+  @UseGuards(AuthGuard)
+  async likeArticle(
+    @Param('slug') slug: string,
+    @User() currentUser: JwtPayload,
+  ) {
+    return this.articleService.likeArticle(slug, currentUser);
+  }
+
+  @Delete(':slug/favorited')
+  @UseGuards(AuthGuard)
+  async dislikeArticle(
+    @Param('slug') slug: string,
+    @User() currentUser: JwtPayload,
+  ) {
+    return this.articleService.dislikeArticle(slug, currentUser);
   }
 }
