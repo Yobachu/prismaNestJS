@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma.service';
 import { UserService } from '../user/user.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JWTSecret } from '../config';
+import { ProfileService } from '../profile/profile.service';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { JWTSecret } from '../config';
       secret: JWTSecret,
     }),
   ],
-  providers: [ArticleService, PrismaService, UserService],
+  providers: [ArticleService, PrismaService, UserService, ProfileService],
   controllers: [ArticleController],
 })
 export class ArticleModule {}

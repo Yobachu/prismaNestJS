@@ -36,6 +36,52 @@ export class ArticleService {
     return { article: article };
   }
 
+  async getCurrentFeed(currentUser: JwtPayload, limit: number, offset: number) {
+    const follows = await this.prisma.follow.findMany({
+      where: {
+        followerId: currentUser.id,
+      },
+      select: {
+        followingId: true,
+      },
+    });
+
+    if (follows.length === 0) {
+      return { articles: [], articlesCount: 0 };
+    }
+    const followingUserIds = follows.map((follow) => follow.followingId);
+    const articles = await this.prisma.article.findMany({
+      where: {
+        authorId: {
+          in: followingUserIds,
+        },
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            bio: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit || undefined,
+      skip: offset || undefined,
+    });
+    const articlesCount = await this.prisma.article.count({
+      where: {
+        authorId: {
+          in: followingUserIds,
+        },
+      },
+    });
+
+    return { articles, articlesCount };
+  }
   async getSingleArticle(slug: string) {
     const article = await this.prisma.article.findFirst({
       where: { slug: slug },
@@ -156,6 +202,7 @@ export class ArticleService {
     });
     delete article.authorId;
     delete article.author.password;
+    delete article.author.email;
     article.likedBy.forEach((user) => {
       delete user.password;
     });
@@ -190,8 +237,15 @@ export class ArticleService {
         favoritesCount: articles.favoritesCount - 1,
       },
     });
+    delete article.authorId;
+    delete article.author.password;
+    delete article.author.email;
+    articles.likedBy.forEach((user) => {
+      delete user.password;
+    });
     return { article: article };
   }
+
   private getSlug(title: string): string {
     return (
       slugify(title, { lower: true }) +

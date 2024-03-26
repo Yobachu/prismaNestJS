@@ -28,6 +28,15 @@ export class ArticleController {
   ) {
     return this.articleService.createArticle(currentUser, createArticleDto);
   }
+  @Get('feed')
+  @UseGuards(AuthGuard)
+  async getCurrentFeed(
+    @User() currentUser: JwtPayload,
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ) {
+    return await this.articleService.getCurrentFeed(currentUser, limit, offset);
+  }
   @Get(':slug')
   async getSingleArticle(@Param('slug') slug: string) {
     const article = await this.articleService.getSingleArticle(slug);
