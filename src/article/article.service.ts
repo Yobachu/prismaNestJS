@@ -85,12 +85,19 @@ export class ArticleService {
   async getSingleArticle(slug: string) {
     const article = await this.prisma.article.findFirst({
       where: { slug: slug },
-      include: { author: true },
+      include: {
+        author: true,
+        categories: true,
+        characteristics: true,
+        packaging: true,
+      },
     });
     delete article.authorId;
     delete article.author.password;
     return article;
   }
+
+
 
   async deleteArticle(currentuser: JwtPayload, slug: string) {
     const article = await this.prisma.article.findFirst({

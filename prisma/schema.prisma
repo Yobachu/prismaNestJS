@@ -27,6 +27,7 @@ model User {
   bio           String?   @default("")
   image         String?   @default("")
   password      String
+  isAdmin       Boolean   @default(false)
   articles      Article[]
   likedArticles Article[] @relation("UserLikes")
 
@@ -34,18 +35,21 @@ model User {
 }
 
 model Article {
-  id             Int      @id @default(autoincrement())
-  slug           String?  @unique
-  title          String
-  description    String
-  body           String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  tagList        String[]
-  favoritesCount Int?     @default(0)
-  author         User?    @relation(fields: [authorId], references: [id])
-  authorId       Int?
-  likedBy        User[]   @relation("UserLikes")
+  id              Int                       @id @default(autoincrement())
+  slug            String?                   @unique
+  title           String
+  description     String
+  body            String
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  tagList         String[]
+  favoritesCount  Int?                      @default(0)
+  author          User?                     @relation(fields: [authorId], references: [id])
+  authorId        Int?
+  likedBy         User[]                    @relation("UserLikes")
+  categories      Category[]
+  characteristics MaterialCharacteristics[]
+  packaging       Packaging[]
 
   @@map("articles")
 }
@@ -55,3 +59,47 @@ model Follow {
   followerId  Int
   followingId Int
 }
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slugCt      String?   @unique
+  description String
+  products    Article[]
+
+  @@map("categories")
+}
+
+model MaterialCharacteristics {
+  id              Int     @id @default(autoincrement())
+  product         Article @relation(fields: [articleId], references: [id])
+  articleId       Int
+  manufacturer    String // Производитель
+  color           String // Цвет
+  material        String // Материал
+  style           String // Стиль
+  purpose         String? // Назначение
+  application     String? // Применение
+  countryOfOrigin String? // Страна-производитель
+  surface         String? // Поверхность
+  length          Float? // Длина, мм
+  width           Float? // Ширина, мм
+  thickness       Float? // Толщина, мм
+
+  @@map("material_characteristics")
+}
+
+model Packaging {
+  id                 Int     @id @default(autoincrement())
+  product            Article @relation(fields: [articleId], references: [id])
+  articleId          Int
+  packagingType      String
+  packagingLength    Float
+  packagingWidth     Float
+  packagingHeight    Float
+  quantityPerPackage Int
+
+  @@map("packaging")
+}
+
+
