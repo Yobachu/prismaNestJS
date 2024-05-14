@@ -8,7 +8,10 @@ import { ExpressRequestInterface } from '../../types/expressRequest.interface';
 export class AuthMiddleware implements NestMiddleware {
   constructor(private jwtService: JwtService) {}
   async use(req: ExpressRequestInterface, res: Response, next: NextFunction) {
-    if (!req.headers.authorization) {
+    if (
+      !req.headers.authorization ||
+      !req.headers.authorization.startsWith('Bearer ')
+    ) {
       req.user = null;
       next();
       return;

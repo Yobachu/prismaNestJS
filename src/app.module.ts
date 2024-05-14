@@ -14,6 +14,8 @@ import { PrismaService } from './prisma.service';
 import { CharacteristicController } from './characteristic/characteristic.controller';
 import { CharacteristicModule } from './characteristic/characteristic.module';
 import { CharacteristicService } from './characteristic/characteristic.service';
+import { PackagingModule } from './packing/packaging.module';
+import { PackagingService } from './packing/packaging.service';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { CharacteristicService } from './characteristic/characteristic.service';
     ProfileModule,
     CategoryModule,
     CharacteristicModule,
+    PackagingModule,
   ],
   controllers: [AppController, CategoryController, CharacteristicController],
   providers: [
@@ -31,6 +34,7 @@ import { CharacteristicService } from './characteristic/characteristic.service';
     CategoryService,
     PrismaService,
     CharacteristicService,
+    PackagingService,
   ],
 })
 export class AppModule {

@@ -31,4 +31,3 @@ export class CharacteristicsDto {
   @IsOptional()
   thickness: number; // Толщина, мм
 }
-

@@ -18,6 +18,7 @@ export class ProfileService {
         username: true,
         bio: true,
         image: true,
+        isCompany: true,
       },
     });
     if (!profiles) {
@@ -44,6 +45,7 @@ export class ProfileService {
     const profiles = await this.prisma.user.findUnique({
       where: {
         username: username,
+        isCompany: true,
       },
       select: {
         id: true,
@@ -53,7 +55,10 @@ export class ProfileService {
       },
     });
     if (!profiles) {
-      throw new HttpException('Profile doesn not exist', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'Profile doesn not exist or is not a company',
+        HttpStatus.NOT_FOUND,
+      );
     }
     if (currentUser.id === profiles.id) {
       throw new HttpException(

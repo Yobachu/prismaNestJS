@@ -26,14 +26,23 @@ export class ArticleService {
         slug: slug,
         authorId: authorId,
       },
-      include: { author: true },
+      include: {
+        author: {
+          select: { username: true, bio: true, image: true, isCompany: true },
+        },
+      },
     });
     if (!article.tagList) {
       article.tagList = [];
     }
-    article.author = user;
-    delete article.authorId;
-    return { article: article };
+    if (article.author.isCompany == false) {
+      delete article.favoritesCount;
+      delete article.authorId;
+      return { article: article };
+    } else {
+      delete article.authorId;
+      return { article: article };
+    }
   }
 
   async getCurrentFeed(currentUser: JwtPayload, limit: number, offset: number) {
@@ -86,18 +95,31 @@ export class ArticleService {
     const article = await this.prisma.article.findFirst({
       where: { slug: slug },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            username: true,
+            bio: true,
+            image: true,
+            isAdmin: true,
+            isCompany: true,
+          },
+        },
         categories: true,
         characteristics: true,
         packaging: true,
       },
     });
-    delete article.authorId;
-    delete article.author.password;
-    return article;
+
+    article.characteristics.forEach((characteristics) => {
+      characteristics.manufacturer = article.author.username;
+    });
+
+    const cleanArticle = { ...article };
+    delete cleanArticle.authorId;
+
+    return cleanArticle;
   }
-
-
 
   async deleteArticle(currentuser: JwtPayload, slug: string) {
     const article = await this.prisma.article.findFirst({

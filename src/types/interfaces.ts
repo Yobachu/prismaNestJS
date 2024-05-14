@@ -3,4 +3,6 @@ export interface JwtPayload {
   email: string;
   password: string;
   username: string;
+  isAdmin: boolean;
+  isCompany: boolean;
 }

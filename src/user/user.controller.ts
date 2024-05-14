@@ -53,4 +53,17 @@ export class UserController {
     const userData = await this.userService.buildUserResponse(user.id);
     return { user: userData };
   }
+
+  @Post('register/brand')
+  @UseGuards(AuthGuard)
+  async createUserAsCompany(
+    @Body('user') createUserDto: CreateUserDto,
+    @User() currentUser: JwtPayload,
+  ) {
+    const user = await this.userService.createUserAsCompany(
+      createUserDto,
+      currentUser,
+    );
+    return { user };
+  }
 }

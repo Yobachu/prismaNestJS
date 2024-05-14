@@ -83,4 +83,37 @@ export class UserService {
     delete user.password;
     return { ...user, token };
   }
+
+  async createUserAsCompany(createUserDto, currentUser) {
+    if (currentUser.isAdmin == false) {
+      throw new HttpException(
+        'Create company can only admin',
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      try {
+        const hashedPassword = await bcrypt.hash(
+          createUserDto.password,
+          roundsOfHashing,
+        );
+        createUserDto.password = hashedPassword;
+        const user = await this.prisma.user.create({
+          data: { ...createUserDto, isCompany: true },
+        });
+        return user;
+      } catch (error) {
+        if (error.code === 'P2002') {
+          throw new HttpException(
+            'Email or Username are taken',
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
+        } else {
+          throw new HttpException(
+            'Internal Server Error',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+      }
+    }
+  }
 }

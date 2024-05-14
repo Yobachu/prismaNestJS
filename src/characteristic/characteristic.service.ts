@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class CharacteristicService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async addCharToArticle(slug, characteristicDto) {
+  async addCharToArticle(slug, characteristicDto, currentUser) {
     const article = await this.prisma.article.findFirst({
       where: { slug: slug },
       include: { author: true, characteristics: true },
@@ -13,15 +13,15 @@ export class CharacteristicService {
 
     let existingCharacteristic = article.characteristics.find(
       (characteristic) => {
-        return (
-          characteristic.manufacturer === characteristicDto.manufacturer &&
-          characteristic.color === characteristicDto.color &&
-          characteristic.material === characteristicDto.material
-        );
+        return characteristic.articleId === article.id;
       },
     );
 
     if (existingCharacteristic) {
+      if (article.authorId !== currentUser.id) {
+        throw new HttpException('You are not an owner', HttpStatus.FORBIDDEN);
+      }
+
       existingCharacteristic = await this.prisma.materialCharacteristics.update(
         {
           where: { id: existingCharacteristic.id },
@@ -30,10 +30,14 @@ export class CharacteristicService {
         },
       );
 
-      existingCharacteristic.manufacturer = article.author.username;
+      existingCharacteristic.manufacturer = currentUser.username;
 
       return existingCharacteristic;
     } else {
+      if (article.authorId !== currentUser.id) {
+        throw new HttpException('You are not an owner', HttpStatus.FORBIDDEN);
+      }
+
       const newCharacteristic =
         await this.prisma.materialCharacteristics.create({
           data: { ...characteristicDto, articleId: article.id },
@@ -49,7 +53,7 @@ export class CharacteristicService {
           },
         });
 
-      newCharacteristic.manufacturer = article.author.username;
+      newCharacteristic.manufacturer = currentUser.username;
 
       return newCharacteristic;
     }

@@ -28,6 +28,7 @@ model User {
   image         String?   @default("")
   password      String
   isAdmin       Boolean   @default(false)
+  isCompany     Boolean   @default(false)
   articles      Article[]
   likedArticles Article[] @relation("UserLikes")
 
@@ -81,7 +82,6 @@ model MaterialCharacteristics {
   purpose         String? // Назначение
   application     String? // Применение
   countryOfOrigin String? // Страна-производитель
-  surface         String? // Поверхность
   length          Float? // Длина, мм
   width           Float? // Ширина, мм
   thickness       Float? // Толщина, мм
@@ -101,5 +101,3 @@ model Packaging {
 
   @@map("packaging")
 }
-
-
