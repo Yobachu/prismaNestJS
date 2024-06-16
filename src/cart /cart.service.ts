@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User } from '@prisma/client';
 import { JwtPayload } from '../types/interfaces';
+import { CartWithTotalPrice } from '../types/cartInterface';
 
 @Injectable()
 export class CartService {
@@ -205,5 +206,47 @@ export class CartService {
     updatedCart.totalPrice = await this.calculateCartTotal(cart.id); // Assign total price
 
     return updatedCart as CartWithTotalPrice;
+  }
+
+  async removeProductFromCart(articleId: number, currentUser: JwtPayload) {
+    const cart = await this.prisma.cart.findFirst({
+      where: {
+        userId: currentUser.id,
+      },
+      include: { user: true },
+    });
+
+    if (!cart) {
+      throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+    }
+    const cartItem = await this.prisma.cartItem.findFirst({
+      where: { cartId: cart.id, productId: Number(articleId) },
+    });
+
+    if (!cartItem) {
+      throw new HttpException(
+        'Product not found in cart',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    await this.prisma.cartItem.delete({
+      where: { id: cartItem.id },
+    });
+
+    const updatedCart: CartWithTotalPrice = await this.prisma.cart.findUnique({
+      where: { id: cart.id },
+      include: {
+        items: {
+          include: {
+            product: { select: { id: true, title: true, price: true } },
+          },
+        },
+      },
+    });
+
+    updatedCart.totalPrice = await this.calculateCartTotal(updatedCart.id);
+
+    return updatedCart;
   }
 }

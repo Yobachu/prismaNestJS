@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -61,5 +62,17 @@ export class CartController {
       currentUser,
     );
     return updatedCart;
+  }
+  @Delete(':articleId/delete')
+  @UseGuards(AuthGuard)
+  async removeProductFromCart(
+    @Param('articleId') articleId: number,
+    @User() currentUser: JwtPayload,
+  ) {
+    const updateCart = await this.cartService.removeProductFromCart(
+      articleId,
+      currentUser,
+    );
+    return updateCart;
   }
 }
