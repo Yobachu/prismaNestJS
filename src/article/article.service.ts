@@ -166,20 +166,29 @@ export class ArticleService {
   async findAll(
     currentUser: JwtPayload,
     limit: number,
-    offset: number,
-    orderBy,
-    author,
-    tags,
+    page: number,
+    orderBy: 'desc' | 'asc',
+    author: string,
+    tags: string[],
+    title: string,
   ) {
+    const offset = (page - 1) * limit;
     const whereCondition: any = {};
+
     if (author) {
       whereCondition.author = { username: author };
     }
+
+    if (title) {
+      whereCondition.title = { contains: title, mode: 'insensitive' };
+    }
+
     if (tags && tags.length > 0) {
       whereCondition.tagList = {
         has: tags,
       };
     }
+
     const articles = await this.prisma.article.findMany({
       where: whereCondition,
       include: {
@@ -189,7 +198,12 @@ export class ArticleService {
       skip: Number(offset) || undefined,
       orderBy: { createdAt: orderBy },
     });
-    const articlesCount = await this.prisma.article.count();
+
+    const articlesCount = await this.prisma.article.count({
+      where: whereCondition,
+    });
+    const pageTotal = Math.ceil(articlesCount / limit);
+
     const articlesWithoutPasswords = articles.map((article) => ({
       ...article,
       author: {
@@ -197,7 +211,13 @@ export class ArticleService {
         password: undefined,
       },
     }));
-    return { articles: articlesWithoutPasswords, articlesCount };
+
+    return {
+      data: articlesWithoutPasswords,
+      pageTotal,
+      page,
+      limit,
+    };
   }
 
   async likeArticle(slug: string, currentUser: JwtPayload) {

@@ -16,6 +16,8 @@ import { CharacteristicModule } from './characteristic/characteristic.module';
 import { CharacteristicService } from './characteristic/characteristic.service';
 import { PackagingModule } from './packing/packaging.module';
 import { PackagingService } from './packing/packaging.service';
+import { CartModule } from './cart /cart.module';
+import { CartService } from './cart /cart.service';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { PackagingService } from './packing/packaging.service';
     CategoryModule,
     CharacteristicModule,
     PackagingModule,
+    CartModule,
   ],
   controllers: [AppController, CategoryController, CharacteristicController],
   providers: [
@@ -35,6 +38,7 @@ import { PackagingService } from './packing/packaging.service';
     PrismaService,
     CharacteristicService,
     PackagingService,
+    CartService,
   ],
 })
 export class AppModule {

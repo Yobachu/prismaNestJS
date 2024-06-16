@@ -72,18 +72,23 @@ export class ArticleController {
   async findAll(
     @User() currentUser: JwtPayload,
     @Query('limit') limit?: number,
-    @Query('offset') offset?: number,
+    @Query('page') page?: number,
     @Query('orderBy') orderBy?: 'desc' | 'asc',
     @Query('author') author?: string,
     @Query('tags') tags?: string[],
+    @Query('title') title?: string,
   ) {
+    limit = limit || 10;
+    page = page || 1;
+
     return this.articleService.findAll(
       currentUser,
       limit,
-      offset,
+      page,
       orderBy,
       author,
       tags,
+      title,
     );
   }
 
@@ -104,5 +109,4 @@ export class ArticleController {
   ) {
     return this.articleService.dislikeArticle(slug, currentUser);
   }
-
 }

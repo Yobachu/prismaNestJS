@@ -7,5 +7,8 @@ export class CreateArticleDto {
   description: string;
   @IsNotEmpty()
   body: string;
+  @IsNotEmpty()
+  price: number;
+
   tagList?: string[];
 }

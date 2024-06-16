@@ -21,7 +21,14 @@ export class UserService {
       createUserDto.password = hashedPassword;
       const user = await this.prisma.user.create({
         data: createUserDto,
+        include: { carts: true },
       });
+      await this.prisma.cart.create({
+        data: {
+          userId: user.id,
+        },
+      });
+
       return user;
     } catch (error) {
       if (error.code === 'P2002') {
@@ -78,6 +85,7 @@ export class UserService {
   async buildUserResponse(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
+      include: { carts: true },
     });
     const token = await this.jwtService.sign({ id: user.id });
     delete user.password;
