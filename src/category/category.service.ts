@@ -56,7 +56,7 @@ export class CategoryService {
       where: { slugCt: slugCt },
       select: {
         name: true,
-        products: { where: { author: { isCompany: true } } },
+        products: true,
       },
     });
     return category;
